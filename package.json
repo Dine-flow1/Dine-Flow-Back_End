@@ -1,0 +1,29 @@
+{
+  "name": "dine-flow-back_end",
+  "version": "1.0.0",
+   "type": "module",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node App.js",
+    "dev": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dine-flow1/Dine-Flow-Back_End.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Dine-flow1/Dine-Flow-Back_End/issues"
+  },
+  "homepage": "https://github.com/Dine-flow1/Dine-Flow-Back_End#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "mongoose": "^8.19.2",
+    "nodemon": "^3.1.10"
+  }
+}
