@@ -3,7 +3,7 @@ import Jwt from "jsonwebtoken";
 import UserModel from "../../Users/Model/UsersSchema";
 import sendEmail from "../utils/email";
 
-const authServiceww = {
+const authService = {
   register: async ({
     fullName,
     email,
@@ -14,7 +14,7 @@ const authServiceww = {
     role,
   }) => {
     const existingUser = await UserModel.findOne({ email });
-    if (!existingUser) throw new Error("Email already registered ");
+    if (existingUser) throw new Error("Email already registered ");
 
     const hashed = await bcrypt.hash(password, 10);
     const user = await UserModel.create({
@@ -26,8 +26,18 @@ const authServiceww = {
       address,
       role,
     });
-    await sendEmail(email, "Welcome!", "Thank you for registering");
-    return { userId: user_id, email: user.email };
+    await sendEmail(
+      email,
+      "Welcome to DineFlow!",
+      `Hi ${fullName}`,
+      "Thank you for registering with DineFlow"
+    );
+    return {
+      userId: user._id,
+      email: user.email,
+      role: user.role,
+      fullName: user.fullName,
+    };
   },
   login: async ({ email, password }) => {
     const user = await UserModel.findOne({ email });
@@ -38,11 +48,24 @@ const authServiceww = {
 
     const token = Jwt.sign(
       { id: user_id, role: user.role },
-      process.env.JWR_SECRET,
+      process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
-    await sendEmail(email, "Login Alert", "You just logged in your account");
-    return { token, user };
+    await sendEmail(
+      email,
+      "Login Notification",
+      `Hi ${user.fullName},`,
+      "You just logged in to your DineFlow account."
+    );
+    return {
+      token,
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+      },
+    };
   },
   forgotPassword: async (email) => {
     const user = await UserModel.findOne({ email });
@@ -52,8 +75,13 @@ const authServiceww = {
     user.resetOtp = otp;
     user.resetOtpExpireAt = Date.now() + 15 * 60 * 1000;
     await user.save();
-    await sendEmail(email, "Password Reset ", `Your otp is${otp}`);
-    return true;
+    await sendEmail(
+      email,
+      "Password Reset Request",
+      `Hi ${user.fullName},`,
+      `Your OTP for password reset is <b>${otp}</b>. It expires in 15 minutes.`
+    );
+    return { message: "OTP sent to your email" };
   },
   resetPassword: async (otp, newPasword) => {
     const user = await UserModel.findOne({
@@ -61,11 +89,11 @@ const authServiceww = {
       resetOtpExpireAt: { $gt: Date.now() },
     });
     if (!user) throw new Error("Invalied or Expried OTP");
-    user.password = await bcrypt.compare(newPasword, 10);
+    user.password = await bcrypt.hash(newPasword, 10);
     user.resetOtp = undefined;
     user.resetOtpExpireAt = undefined;
     await user.save();
-    return true;
+    return { message: "Password reset successfully" };
   },
 };
 export default authService;

@@ -3,7 +3,13 @@ import authService from "../services/auth.services";
 export const register = async (req, res) => {
   try {
     const result = await authService.register(req.body);
-    res.status(201).json({ success: true, data: result });
+    res
+      .status(201)
+      .json({
+        success: true,
+        message: "User registered successfully",
+        data: result,
+      });
   } catch (error) {
     console.log("registerError", error);
 
@@ -13,8 +19,20 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
-    const result = await authService.login(req.body);
-    res.status(200).json({ success: true, data: result });
+    const { token, user } = await authService.login(req.body);
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Login successful",
+      data: { user },
+    });
   } catch (error) {
     console.log("LoginError", error);
     res.status(401).json({ success: false, message: error.message });
@@ -35,7 +53,7 @@ export const forgotPassword = async (req, res) => {
 export const resetPassword = async (req, res) => {
   try {
     const { otp, newPassword } = req.body;
-    const result = await authService.resetPassword(otp.newPassword);
+    const result = await authService.resetPassword(otp, newPassword);
     res
       .status(200)
       .json({ success: true, message: "Password updated", data: result });
