@@ -1,4 +1,4 @@
-import authService from "../services/auth.services";
+import authService from "../services/auth.services.js";
 
 export const register = async (req, res) => {
   try {
@@ -11,7 +11,7 @@ export const register = async (req, res) => {
         data: result,
       });
   } catch (error) {
-    console.log("registerError", error);
+    console.log("authregisterErrorin ctlr", error);
 
     res.status(400).json({ success: false, message: error.message });
   }
