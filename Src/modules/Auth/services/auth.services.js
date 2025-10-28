@@ -1,7 +1,8 @@
 import bcrypt from "bcrypt";
 import Jwt from "jsonwebtoken";
-import UserModel from "../../Users/Model/UsersSchema";
-import sendEmail from "../utils/email";
+import UserModel from "../../Users/Model/UsersSchema.js";
+import sendEmail from "../utils/email.js";
+
 
 const authService = {
   register: async ({
@@ -41,13 +42,15 @@ const authService = {
   },
   login: async ({ email, password }) => {
     const user = await UserModel.findOne({ email });
+    console.log(user);
+    
     if (!user) throw new Error("User Not Found");
 
-    const valid = await bcrypt.compare(password, user.password);
+    const valid = await bcrypt.hash(password, user.password);
     if (!valid) throw new Error("Invalid Password");
 
     const token = Jwt.sign(
-      { id: user_id, role: user.role },
+      { id: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
