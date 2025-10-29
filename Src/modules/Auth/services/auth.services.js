@@ -3,7 +3,6 @@ import Jwt from "jsonwebtoken";
 import UserModel from "../../Users/Model/UsersSchema.js";
 import sendEmail from "../utils/email.js";
 
-
 const authService = {
   register: async ({
     fullName,
@@ -25,7 +24,7 @@ const authService = {
       contact,
       profileImage,
       address,
-      role,
+      role: "customer",
     });
     await sendEmail(
       email,
@@ -42,11 +41,9 @@ const authService = {
   },
   login: async ({ email, password }) => {
     const user = await UserModel.findOne({ email });
-    console.log(user);
-    
+    // console.log(user);
     if (!user) throw new Error("User Not Found");
-
-    const valid = await bcrypt.hash(password, user.password);
+    const valid = await bcrypt.compare(password, user.password);
     if (!valid) throw new Error("Invalid Password");
 
     const token = Jwt.sign(

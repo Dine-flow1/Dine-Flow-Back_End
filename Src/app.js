@@ -15,6 +15,8 @@ app.use("/api/auth", authRouting);
 app.use("/api/restaurants", Restaurantrouter);
 app.use("/api/owner", ownerRoutes);
 
+
+
 connectDB();
 
 const PORT = process.env.PORT || 5000;
