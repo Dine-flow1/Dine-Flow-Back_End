@@ -1,365 +1,206 @@
-import Restaurant from "../../Restaurant/models/restaurantmodel.js";
 import Menucategory from "../models/MenuCategorySchema.js";
 import MenuItem from "../models/MenuItemSchema.js";
+import Restaurant from "../../Restaurant/models/restaurantmodel.js";
 import mongoose from "mongoose";
 
 export const menuService = {
-  addCategory: async (data, user) => {
+  createCategory: async (data, user) => {
     try {
       let restaurantId = user?.restaurantId;
-
-      // If restaurantId not in user (owner), fetch it
       if (!restaurantId) {
-        const restaurant = await Restaurant.findOne({
-          ownerId: new mongoose.Types.ObjectId(user._id),
-        });
-        if (!restaurant) {
-          return {
-            status: 404,
-            message: "Restaurant not found for this owner",
-            data: null,
-          };
-        }
+        const restaurant = await Restaurant.findOne({ ownerId: user._id });
+        if (!restaurant)
+          return { status: 404, message: "Restaurant not found" };
         restaurantId = restaurant._id;
       }
-
-      // Check if category already exists
-      const existing = await Menucategory.findOne({
-        restaurantId: new mongoose.Types.ObjectId(restaurantId),
+      console.log(restaurantId);
+     
+      const existingCategory = await Menucategory.findOne({
+        restaurantId,
         name: data.name.trim(),
       });
 
-      if (existing)
-        return { status: 400, message: "Category already exists", data: null };
+      if (existingCategory) {
+        return { status: 400, message: "Category already exists" };
+      }
 
-      const category = await Menucategory.create({
-        ...data,
-        restaurantId,
-      });
-
-      return {
-        status: 201,
-        message: "Category added successfully",
-        data: category,
-      };
-    } catch (err) {
-      console.error("addCategory Service Error:", err);
-      return { status: 500, message: err.message, data: null };
+      const category = await Menucategory.create({ ...data, restaurantId });
+      return { status: 201, message: "Category created", data: category };
+    } catch (error) {
+      return { status: 500, message: error.message };
     }
   },
 
-  getCategories: async (user) => {
+  getAllCategories: async (id) => {
+    console.log("sdds",id);
+
+    try {
+      const categories = await Menucategory.find({ id });
+      return { status: 200, message: "Categories fetched", data: categories };
+    } catch (error) {
+      return { status: 500, message: error.message };
+    }
+  },
+
+  getCategoryById: async (id) => {
+    try {
+      if (!mongoose.Types.ObjectId.isValid(id))
+        return { status: 400, message: "Invalid category ID" };
+
+      const category = await Menucategory.findById(id);
+      if (!category) return { status: 404, message: "Category not found" };
+      return { status: 200, message: "Category fetched", data: category };
+    } catch (error) {
+      return { status: 500, message: error.message };
+    }
+  },
+
+  updateCategory: async (id, data) => {
+    try {
+      const category = await Menucategory.findByIdAndUpdate(id, data, {
+        new: true,
+      });
+      if (!category) return { status: 404, message: "Category not found" };
+      return { status: 200, message: "Category updated", data: category };
+    } catch (error) {
+      return { status: 500, message: error.message };
+    }
+  },
+
+  deleteCategory: async (id) => {
+    try {
+      const deleted = await Menucategory.findByIdAndDelete(id);
+      if (!deleted) return { status: 404, message: "Category not found" };
+      return { status: 200, message: "Category deleted" };
+    } catch (error) {
+      return { status: 500, message: error.message };
+    }
+  },
+
+ createItem: async (data, user) => {
     try {
       let restaurantId = user?.restaurantId;
-
       if (!restaurantId) {
-        const restaurant = await Restaurant.findOne({
-          ownerId: new mongoose.Types.ObjectId(user._id),
-        });
-        if (!restaurant) {
-          return {
-            status: 404,
-            message: "Restaurant not found for this owner",
-            data: [],
-          };
-        }
+        const restaurant = await Restaurant.findOne({ ownerId: user._id });
+        if (!restaurant)
+          return { status: 404, message: "Restaurant not found" };
         restaurantId = restaurant._id;
       }
 
-      const categories = await Menucategory.find({
-        restaurantId: new mongoose.Types.ObjectId(restaurantId),
-        isActive: true,
-      }).sort({ sortOrder: 1 });
-
-      return {
-        status: 200,
-        message: "Categories fetched successfully",
-        data: categories,
-      };
-    } catch (err) {
-      console.error("getCategories Service Error:", err);
-      return { status: 500, message: err.message, data: null };
+      const item = await MenuItem.create({ ...data, restaurantId });
+      return { status: 201, message: "Item created", data: item };
+    } catch (error) {
+      return { status: 500, message: error.message };
     }
   },
 
-  getCategoriesByRestaurantId: async (restaurantId) => {
+  getAllItems: async (id, categoryId = null) => {
+    console.log(categoryId);
+    console.log(id);
+    
     try {
-      const categories = await Menucategory.find({
-        restaurantId,
-        isActive: true,
-      });
+      const filter = { id };
+      if (categoryId) filter.categoryId = categoryId;
 
-      if (!categories || categories.length === 0) {
-        return {
-          status: 404,
-          message: "No categories found for this restaurant",
-          data: [],
-        };
-      }
-
-      return {
-        status: 200,
-        message: "Categories fetched successfully",
-        data: categories,
-      };
-    } catch (err) {
-      console.error("getCategoriesByRestaurantId Service Error:", err);
-      return { status: 500, message: err.message, data: null };
+      const items = await MenuItem.find(filter).populate("categoryId", "name");
+      return { status: 200, message: "Items fetched", data: items };
+    } catch (error) {
+      return { status: 500, message: error.message };
     }
   },
 
-  addItem: async (user, data) => {
+  getItemById: async (id) => {
     try {
-      let restaurantId = user?.restaurantId;
+      if (!mongoose.Types.ObjectId.isValid(id))
+        return { status: 400, message: "Invalid item ID" };
 
-      if (!restaurantId) {
-        const restaurant = await Restaurant.findOne({
-          ownerId: new mongoose.Types.ObjectId(user._id),
-        });
-        if (!restaurant) {
-          return {
-            status: 404,
-            message: "Restaurant not found for this owner",
-            data: null,
-          };
-        }
-        restaurantId = restaurant._id;
-      }
-
-      const categoryId = data.categoryId;
-      const category = await Menucategory.findOne({
-        _id: categoryId,
-        restaurantId,
-      });
-
-      if (!category)
-        return { status: 400, message: "Invalid category", data: null };
-
-      const existingItem = await MenuItem.findOne({
-        restaurantId: new mongoose.Types.ObjectId(restaurantId),
-        name: data.name,
-      });
-      if (existingItem)
-        return { status: 400, message: "Item already exists", data: null };
-
-      const item = await MenuItem.create({
-        ...data,
-        restaurantId,
-      });
-
-      const populatedItem = await item.populate(
-        "categoryId",
-        "name description image"
-      );
-
-      return {
-        status: 201,
-        message: "Item added successfully",
-        data: populatedItem,
-      };
-    } catch (err) {
-      console.error("addItem Service Error:", err);
-      return { status: 500, message: err.message, data: null };
+      const item = await MenuItem.findById(id).populate("categoryId", "name");
+      if (!item) return { status: 404, message: "Item not found" };
+      return { status: 200, message: "Item fetched", data: item };
+    } catch (error) {
+      return { status: 500, message: error.message };
     }
   },
 
-  getItems: async (user, categoryId = null) => {
+  updateItem: async (id, data) => {
     try {
-      let restaurantId = user?.restaurantId;
-
-      if (!restaurantId) {
-        const restaurant = await Restaurant.findOne({
-          ownerId: user._id,
-        });
-        if (!restaurant) {
-          return {
-            status: 404,
-            message: "Restaurant not found for this owner",
-            data: [],
-          };
-        }
-        restaurantId = restaurant._id;
-      }
-
-      let query = {
-        restaurantId,
-        isAvailable: true,
-      };
-
-      if (categoryId && mongoose.Types.ObjectId.isValid(categoryId)) {
-        query.categoryId = categoryId;
-      }
-
-      const items = await MenuItem.find(query).populate(
-        "categoryId",
-        "name description image"
-      );
-
-      return {
-        status: 200,
-        message: "Items fetched successfully",
-        data: items,
-      };
-    } catch (err) {
-      console.error("getItems Service Error:", err);
-      return { status: 500, message: err.message, data: null };
+      const item = await MenuItem.findByIdAndUpdate(id, data, { new: true });
+      if (!item) return { status: 404, message: "Item not found" };
+      return { status: 200, message: "Item updated", data: item };
+    } catch (error) {
+      return { status: 500, message: error.message };
     }
   },
 
- getItemById: async (itemId, user) => {
+  deleteItem: async (id) => {
     try {
-  
-      if (!mongoose.Types.ObjectId.isValid(itemId)) {
-        return { status: 400, message: "Invalid item ID", data: null };
-      }
-
-
-      if (!user?.restaurantId) {
-        return { status: 400, message: "Restaurant ID missing in user", data: null };
-      }
-
-      
-      const item = await MenuItem.findOne({
-        _id: itemId,
-        restaurantId: user.restaurantId,
-        isAvailable: true, 
-      }).populate("categoryId", "name description image");
-
-      if (!item) {
-        return { status: 404, message: "Item not found", data: null };
-      }
-
- 
-      return { status: 200, message: "Item fetched successfully", data: item };
-    } catch (err) {
-      console.error("getItemById Service Error:", err);
-      return { status: 500, message: err.message, data: null };
+      const deleted = await MenuItem.findByIdAndDelete(id);
+      if (!deleted) return { status: 404, message: "Item not found" };
+      return { status: 200, message: "Item deleted" };
+    } catch (error) {
+      return { status: 500, message: error.message };
     }
   },
 
-  getFullMenu: async (restaurantId) => {
-    try {
-      const categories = await Menucategory.find({
-        restaurantId: new mongoose.Types.ObjectId(restaurantId),
-        isActive: true,
-      }).sort({ sortOrder: 1 });
+  // ---------- FULL MENU ----------
+getFullMenu: async (user, restaurantId = null) => {
+  try {
+    // ✅ 1. If restaurantId not provided, find from user
+    if (!restaurantId) {
+      if (!user?._id) {
+        return { status: 400, message: "User information missing" };
+      }
 
-      const items = await MenuItem.find({
-        restaurantId: new mongoose.Types.ObjectId(restaurantId),
-        isAvailable: true,
-      }).populate("categoryId", "name description image");
-
-      const fullMenu = categories.map((cat) => ({
-        ...cat.toObject(),
-        items: items.filter(
-          (i) => i.categoryId._id.toString() === cat._id.toString()
-        ),
-      }));
-
-      return {
-        status: 200,
-        message: "Full menu fetched successfully",
-        data: fullMenu,
-      };
-    } catch (err) {
-      console.error("getFullMenu Service Error:", err);
-      return { status: 500, message: err.message, data: null };
+      const restaurantDoc = await Restaurant.findOne({ ownerId: user._id });
+      if (!restaurantDoc) {
+        return { status: 404, message: "Restaurant not found for this user" };
+      }
+      restaurantId = restaurantDoc._id;
     }
-  },
 
-  updateCategory: async (categoryId, data, user) => {
-    try {
-      const category = await Menucategory.findOneAndUpdate(
-        {
-          _id: new mongoose.Types.ObjectId(categoryId),
-          restaurantId: new mongoose.Types.ObjectId(user.restaurantId),
+    // ✅ 2. Validate restaurantId
+    if (!mongoose.Types.ObjectId.isValid(restaurantId)) {
+      return { status: 400, message: "Invalid restaurant ID" };
+    }
+
+    // ✅ 3. Check if restaurant exists
+    const restaurant = await Restaurant.findById(restaurantId);
+    if (!restaurant) {
+      return { status: 404, message: "Restaurant not found" };
+    }
+
+    // ✅ 4. Fetch categories & items
+    const categories = await Menucategory.find({ restaurantId });
+    const menu = [];
+
+    for (const category of categories) {
+      const items = await MenuItem.find({ categoryId: category._id });
+      menu.push({
+        category: {
+          _id: category._id,
+          name: category.name,
+          description: category.description,
+          image: category.image,
         },
-        data,
-        { new: true }
-      );
-      if (!category)
-        return { status: 404, message: "Category not found", data: null };
-
-      return {
-        status: 200,
-        message: "Category updated successfully",
-        data: category,
-      };
-    } catch (err) {
-      console.error("updateCategory Service Error:", err);
-      return { status: 500, message: err.message, data: null };
+        items,
+      });
     }
-  },
 
-  updateItem: async (itemId, data, user) => {
-    try {
-      if (data.categoryId) {
-        const category = await Menucategory.findOne({
-          _id: new mongoose.Types.ObjectId(data.categoryId),
-          restaurantId: new mongoose.Types.ObjectId(user.restaurantId),
-        });
-        if (!category)
-          return { status: 400, message: "Invalid category", data: null };
-      }
-
-      const item = await MenuItem.findOneAndUpdate(
-        {
-          _id: new mongoose.Types.ObjectId(itemId),
-          restaurantId: new mongoose.Types.ObjectId(user.restaurantId),
+    // ✅ 5. Return structured full menu
+    return {
+      status: 200,
+      message: "Full menu fetched successfully",
+      data: {
+        restaurant: {
+          _id: restaurant._id,
+          name: restaurant.name,
         },
-        data,
-        { new: true }
-      ).populate("categoryId", "name description image");
+        menu,
+      },
+    };
+  } catch (error) {
+    return { status: 500, message: error.message };
+  }
+},
 
-      if (!item) return { status: 404, message: "Item not found", data: null };
-
-      return { status: 200, message: "Item updated successfully", data: item };
-    } catch (err) {
-      console.error("updateItem Service Error:", err);
-      return { status: 500, message: err.message, data: null };
-    }
-  },
-
-  deleteCategory: async (categoryId, user) => {
-    try {
-      const category = await Menucategory.findOneAndUpdate(
-        {
-          _id: new mongoose.Types.ObjectId(categoryId),
-          restaurantId: new mongoose.Types.ObjectId(user.restaurantId),
-        },
-        { isActive: false },
-        { new: true }
-      );
-      if (!category)
-        return { status: 404, message: "Category not found", data: null };
-
-      return {
-        status: 200,
-        message: "Category deleted successfully",
-        data: category,
-      };
-    } catch (err) {
-      console.error("deleteCategory Service Error:", err);
-      return { status: 500, message: err.message, data: null };
-    }
-  },
-
-  deleteItem: async (itemId, user) => {
-    try {
-      const item = await MenuItem.findOneAndUpdate(
-        {
-          _id: new mongoose.Types.ObjectId(itemId),
-          restaurantId: new mongoose.Types.ObjectId(user.restaurantId),
-        },
-        { isAvailable: false },
-        { new: true }
-      );
-      if (!item) return { status: 404, message: "Item not found", data: null };
-
-      return { status: 200, message: "Item deleted successfully", data: item };
-    } catch (err) {
-      console.error("deleteItem Service Error:", err);
-      return { status: 500, message: err.message, data: null };
-    }
-  },
 };
