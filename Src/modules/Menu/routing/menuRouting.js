@@ -1,63 +1,24 @@
 import express from "express";
-import {
-  addCategory,
-  addItem,
-  deleteCategory,
-  deleteItem,
-  getCategories,
-  getCategoriesByRestaurantId,
-  getItemById,
-  getItems,
-  updateCategory,
-  updateItem,
-} from "../controllers/menuControllers.js";
-import { authorizeRoles } from "../../../middleware/authmiddleware.js";
-import {
-  addCategoryValidation,
-  addItemVallidation,
-} from "../vallidetion/menuValidation.js";
-import { validateRequest } from "../../../middleware/validateRequest.js";
+import { menuController } from "../controllers/menuControllers.js";
+import { authMiddleware, authorizeRoles } from "../../../middleware/authmiddleware.js";
 
-const menuRoutin = express.Router();
+const router = express.Router();
 
-// Categorys
-menuRoutin.post(
-  "/categories",
-  authorizeRoles("manager", "restaurant_owner"),
-  validateRequest(addCategoryValidation),
-  addCategory
-);
-menuRoutin.get("/getCategories", getCategories);
-menuRoutin.get("/getCategories/:restaurantId", getCategoriesByRestaurantId);
-menuRoutin.put(
-  "/updateCategories/:id",
-  authorizeRoles("manager", "restaurant_owner"),
-  updateCategory
-);
-menuRoutin.delete(
-  "/deletedCategories/:id",
-  authorizeRoles("manager", "restaurant_owner"),
-  deleteCategory
-);
 
-// Items
-menuRoutin.post(
-  "/items",
-  authorizeRoles("manager", "restaurant_owner"),
-  addItem
-);
-menuRoutin.get("/getItems", getItems);
-menuRoutin.get("/getItem/:id", getItemById);
-menuRoutin.put(
-  "/updateItems/:id",
-  authorizeRoles("manager", "restaurant_owner"),
-  updateItem
-);
-menuRoutin.delete(
-  "/deleteItems/:id",
-  authorizeRoles("manager", "restaurant_owner"),
-  validateRequest(addItemVallidation),
-  deleteItem
-);
+router.post("/category", authMiddleware,authorizeRoles("restaurant_owner"), menuController.createCategory);
+router.get("/categories", authMiddleware,authorizeRoles("restaurant_owner"), menuController.getAllCategories);
+router.get("/category/:id",authMiddleware,authorizeRoles(""), menuController.getCategoryById);
+router.put("/category/:id",authMiddleware,authorizeRoles("restaurant_owner"), menuController.updateCategory);
+router.delete("/deleteCategory/:id",authMiddleware,authorizeRoles("restaurant_owner"), menuController.deleteCategory);
 
-export default menuRoutin;
+// ITEM routes
+router.post("/item", authMiddleware,authorizeRoles("restaurant_owner"), menuController.createItem);
+router.get("/items", authMiddleware,authorizeRoles(""), menuController.getAllItems);
+router.get("/item/:id",authMiddleware,authorizeRoles(""), menuController.getItemById);
+router.put("/item/:id",authMiddleware,authorizeRoles("restaurant_owner"), menuController.updateItem);
+router.delete("/itemDeleted/:id",authMiddleware,authorizeRoles("restaurant_owner"), menuController.deleteItem);
+
+// FULL MENU
+router.get("/fullmenu/:restaurantId",authMiddleware,authorizeRoles("restaurant_owner"), menuController.getFullMenu);
+
+export default router;
