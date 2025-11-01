@@ -4,10 +4,6 @@ import {
   registerRestaurantSchema,
 } from "../validation/validation.js";
 
-const validate = (schema, data) => {
-  const { error } = schema.validate(data, { abortEarly: false });
-  if (error) throw new Error(error.details.map((d) => d.message).join(", "));
-};
 
 export const registerRestaurants = async (req, res) => {
   try {

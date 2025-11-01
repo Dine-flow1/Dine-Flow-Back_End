@@ -7,15 +7,14 @@ const BranchSchema = new mongoose.Schema({
     type: { type: String, enum: ["Point"], default: "Point" },
     coordinates: {
       type: [Number],
-      required: true, 
+      required: true,
     },
   },
   contactPhone: { type: String, required: true },
-  openingHours: { type: Object }, 
+  openingHours: { type: Object },
 });
 
 const RestaurantSchema = new mongoose.Schema({
- 
   restaurantName: { type: String, required: true },
   restaurantType: { type: String, required: true },
   description: { type: String },
@@ -23,33 +22,26 @@ const RestaurantSchema = new mongoose.Schema({
   bannerImage: { type: String },
   website: { type: String },
 
-
   contactEmail: { type: String, required: true, unique: true },
   contactPhone: { type: String, required: true },
 
- 
   otp: { type: String },
   otpExpires: { type: Date },
   isVerified: { type: Boolean, default: false },
 
+  ownerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "users",
+    required: true,
+  },
 
-ownerId: {
-  type: mongoose.Schema.Types.ObjectId,
-  ref: "users", 
-  required: true,
-},
-
-
- 
-  panNumber: { type: String },  
+  panNumber: { type: String },
   gstinNumber: { type: String },
   fssaiNumber: { type: String },
   registrationNumber: { type: String },
 
-
   branches: [BranchSchema],
 
-  
   status: {
     type: String,
     enum: ["active", "suspended", "pending_verification"],
@@ -64,14 +56,12 @@ ownerId: {
   },
   approvedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "users", 
+    ref: "users",
   },
   approvedAt: { type: Date },
 
-
   createdAt: { type: Date, default: Date.now },
 });
-
 
 RestaurantSchema.index({ "branches.geoLocation": "2dsphere" });
 

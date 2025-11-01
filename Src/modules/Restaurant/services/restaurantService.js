@@ -4,17 +4,15 @@ import UserModel from "../../Users/Model/UsersSchema.js";
 import sendEmail from "../utils/email.js";
 
 const restaurantService = {
- register: async (data) => {
+  register: async (data) => {
     const { restaurantData, ownerData } = data;
 
-   
     const existingUser = await UserModel.findOne({ email: ownerData.email });
-    if (existingUser) throw new Error("Owner email already registered as a user");
-
+    if (existingUser)
+      throw new Error("Owner email already registered as a user");
 
     const hashedPassword = await bcrypt.hash(ownerData.password, 10);
 
-    
     const user = await UserModel.create({
       fullName: ownerData.fullName,
       email: ownerData.email,
@@ -24,11 +22,9 @@ const restaurantService = {
       isAccountVerified: false,
     });
 
-
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpires = Date.now() + 5 * 60 * 1000; 
+    const otpExpires = Date.now() + 5 * 60 * 1000;
 
-    
     const restaurant = await Restaurant.create({
       ...restaurantData,
       ownerId: user._id,
@@ -37,9 +33,8 @@ const restaurantService = {
       isVerified: false,
       status: "pending_verification",
     });
-console.log("New User ID:", user._id);
+    console.log("New User ID:", user._id);
 
-  
     await sendEmail(
       ownerData.email,
       "Verify your DineFlow Account",
@@ -47,7 +42,6 @@ console.log("New User ID:", user._id);
       `Your OTP for DineFlow account verification is <b>${otp}</b>. It will expire in 5 minutes.`
     );
 
- 
     return {
       message: "OTP sent to your email for verification.",
       restaurantId: restaurant._id,
