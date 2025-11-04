@@ -3,7 +3,6 @@ import Jwt from "jsonwebtoken";
 import UserModel from "../../Users/Model/UsersSchema.js";
 import sendEmail from "../utils/email.js";
 
-
 const authService = {
   register: async ({
     fullName,
@@ -25,7 +24,7 @@ const authService = {
       contact,
       profileImage,
       address,
-      role,
+      role: "customer",
     });
     await sendEmail(
       email,
@@ -40,19 +39,17 @@ const authService = {
       fullName: user.fullName,
     };
   },
+
   login: async ({ email, password }) => {
     const user = await UserModel.findOne({ email });
-    console.log(user);
-    
     if (!user) throw new Error("User Not Found");
-
-    const valid = await bcrypt.hash(password, user.password);
+    const valid = await bcrypt.compare(password, user.password);
     if (!valid) throw new Error("Invalid Password");
 
     const token = Jwt.sign(
-      { id: user._id, role: user.role },
+      { email: user.email, _id: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn:process.env.JWT_EXPIRES|| "7d" }
     );
     await sendEmail(
       email,
@@ -70,6 +67,8 @@ const authService = {
       },
     };
   },
+
+
   forgotPassword: async (email) => {
     const user = await UserModel.findOne({ email });
     if (!user) throw new Error("No account found with that email ");

@@ -18,12 +18,14 @@ export const loginOwner = async (req, res) => {
         success: true,
         data: { email, role: "owner" }
       });
+
     } else {
       return res.status(401).json({
         success: false,
         message: "Invalid credentials"
       });
     }
+
 
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });

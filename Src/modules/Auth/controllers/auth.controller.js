@@ -3,13 +3,11 @@ import authService from "../services/auth.services.js";
 export const register = async (req, res) => {
   try {
     const result = await authService.register(req.body);
-    res
-      .status(201)
-      .json({
-        success: true,
-        message: "User registered successfully",
-        data: result,
-      });
+    res.status(201).json({
+      success: true,
+      message: "User registered successfully",
+      data: result,
+    });
   } catch (error) {
     console.log("authregisterErrorin ctlr", error);
 
@@ -20,7 +18,9 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { token, user } = await authService.login(req.body);
-
+    console.log("controler",token);
+    console.log("controler",user);
+    
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",

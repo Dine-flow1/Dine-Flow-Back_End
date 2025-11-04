@@ -7,11 +7,11 @@ const BranchSchema = new mongoose.Schema({
     type: { type: String, enum: ["Point"], default: "Point" },
     coordinates: {
       type: [Number],
-      required: true, // [longitude, latitude]
+      required: true,
     },
   },
   contactPhone: { type: String, required: true },
-  openingHours: { type: Object }, // example: { mon: "9-9", tue: "10-8" }
+  openingHours: { type: Object },
 });
 
 const RestaurantSchema = new mongoose.Schema({
@@ -28,13 +28,11 @@ const RestaurantSchema = new mongoose.Schema({
   otp: { type: String },
   otpExpires: { type: Date },
   isVerified: { type: Boolean, default: false },
-  owner: {
-    fullName: { type: String, required: true },
-    email: { type: String, required: true },
-    password: { type: String, required: true }, // hashed
-    phone: String,
-    role: { type: String, default: "restaurant_owner" },
-    isAccountVerified: { type: Boolean, default: false },
+
+  ownerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "users",
+    required: true,
   },
 
   panNumber: { type: String },
@@ -42,13 +40,25 @@ const RestaurantSchema = new mongoose.Schema({
   fssaiNumber: { type: String },
   registrationNumber: { type: String },
 
-  branches: [BranchSchema], // multiple branches
+  branches: [BranchSchema],
 
   status: {
     type: String,
     enum: ["active", "suspended", "pending_verification"],
     default: "pending_verification",
   },
+
+  isApproved: { type: Boolean, default: false },
+  approvalStatus: {
+    type: String,
+    enum: ["pending", "approved", "rejected"],
+    default: "pending",
+  },
+  approvedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "users",
+  },
+  approvedAt: { type: Date },
 
   createdAt: { type: Date, default: Date.now },
 });
