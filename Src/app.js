@@ -12,12 +12,14 @@ const app = express();
 app.use(express.json());
 
 app.use("/api/auth", authRouting);
+
 app.use("/api/restaurants", Restaurantrouter);
 app.use("/api/owner", ownerRoutes);
 
+
 connectDB();
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 9999;
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });

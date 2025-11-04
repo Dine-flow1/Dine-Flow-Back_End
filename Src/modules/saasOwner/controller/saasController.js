@@ -4,7 +4,7 @@ dotenv.config();
 
 const validate = (schema, data) => {
   const { error } = schema.validate(data, { abortEarly: false });
-  if (error) throw new Error(error.details.map(d => d.message).join(", "));
+  if (error) throw new Error(error.details.map(d => d.message).join(", "))
 };
 
 export const loginOwner = async (req, res) => {

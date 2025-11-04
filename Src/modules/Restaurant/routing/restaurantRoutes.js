@@ -13,7 +13,7 @@ Restaurantrouter.post("/register", registerRestaurants);
 
 Restaurantrouter.post("/verify-otp", verifyRestaurantOtp);
 
-Restaurantrouter.get("/", getAllRestaurants);
+Restaurantrouter.get("/restaurants", getAllRestaurants);
 Restaurantrouter.post("/:restaurantId/branches", addBranch);
 
 Restaurantrouter.get("/:id", getRestaurantById);

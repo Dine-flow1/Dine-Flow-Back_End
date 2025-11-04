@@ -9,7 +9,7 @@ const userSchama = new mongoose.Schema({
     trim: true,
   },
   password: { type: String },
-  googleId: { type: String }, // for Google login
+  googleId: { type: String }, 
   role: {
     type: String,
     enum: [
