@@ -6,7 +6,6 @@ import Restaurantrouter from "./modules/Restaurant/routing/restaurantRoutes.js";
 import authRouting from "./modules/Auth/routing/authrouting.js";
 import ownerRoutes from "./modules/saasOwner/routing/saasRouting.js";
 import menuRoutin from "./modules/Menu/routing/menuRouting.js";
-import { authMiddleware } from "./middleware/authmiddleware.js";
 
 dotenv.config();
 
