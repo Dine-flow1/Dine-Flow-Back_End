@@ -7,7 +7,7 @@ import authRouting from "./modules/Auth/routing/authrouting.js";
 import ownerRoutes from "./modules/saasOwner/routing/saasRouting.js";
 import paymentRoutes from "./modules/payment/routing/paymentRoutes.js"
 import menuRoutin from "./modules/Menu/routing/menuRouting.js";
-import { authMiddleware } from "./middleware/authmiddleware.js";
+import orderRouting from "./modules/Orders/routing/orderRouting.js";
 
 dotenv.config();
 
@@ -21,6 +21,7 @@ app.use("/api/restaurants", Restaurantrouter);
 app.use("/api/owner", ownerRoutes);
 app.use("/api/menu", menuRoutin);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/order", orderRouting);
 
 
 

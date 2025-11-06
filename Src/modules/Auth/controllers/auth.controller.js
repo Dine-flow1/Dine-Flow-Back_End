@@ -25,7 +25,7 @@ export const login = async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+       maxAge: 15 * 60 * 1000,
     });
 
     res.status(200).json({
@@ -38,6 +38,28 @@ export const login = async (req, res) => {
     res.status(401).json({ success: false, message: error.message });
   }
 };
+export const logout = async (req, res) => {
+  try {
+    const result = await authService.logout();
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    res.status(200).json({
+      success: true,
+      message: result.message,
+    });
+  } catch (error) {
+    console.log("Logout Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Logout failed, please try again",
+    });
+  }
+};
+
 export const forgotPassword = async (req, res) => {
   try {
     const result = await authService.forgotPassword(req.body.email);

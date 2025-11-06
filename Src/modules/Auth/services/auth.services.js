@@ -49,7 +49,7 @@ const authService = {
     const token = Jwt.sign(
       { email: user.email, _id: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn:process.env.JWT_EXPIRES|| "7d" }
+      { expiresIn:process.env.JWT_EXPIRES|| "15m" }
     );
     await sendEmail(
       email,
@@ -96,6 +96,9 @@ const authService = {
     user.resetOtpExpireAt = undefined;
     await user.save();
     return { message: "Password reset successfully" };
+  },
+    logout: async () => {
+    return { message: "Logged out successfully" };
   },
 };
 export default authService;
