@@ -8,6 +8,7 @@ import ownerRoutes from "./modules/saasOwner/routing/saasRouting.js";
 import paymentRoutes from "./modules/payment/routing/paymentRoutes.js"
 import menuRoutin from "./modules/Menu/routing/menuRouting.js";
 import orderRouting from "./modules/Orders/routing/orderRouting.js";
+import TableRouting from "./modules/Booking/Routing/tableRouting.js";
 
 dotenv.config();
 
@@ -22,6 +23,7 @@ app.use("/api/owner", ownerRoutes);
 app.use("/api/menu", menuRoutin);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/order", orderRouting);
+app.use("/api/tableBooking", TableRouting);
 
 
 
