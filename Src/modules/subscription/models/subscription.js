@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const SubscriptionSchema = new mongoose.Schema({
   restaurantId: {
@@ -8,20 +8,19 @@ const SubscriptionSchema = new mongoose.Schema({
   },
   subscriptionPlan: {
     type: String,
-    enum: ['basic', 'pro', 'enterprise'],
-    default: 'basic',
+    enum: ['6_months', '1_year'],
+    required: true,
   },
   status: {
     type: String,
-    enum: ['trial', 'active', 'expired', 'canceled'],
-    default: 'trial',
+    enum: ['pending', 'active', 'expired', 'canceled'],
+    default: 'pending',
   },
   startDate: { type: Date, default: Date.now },
   endDate: Date,
-  trialEndsAt: Date,
   amount: { type: Number, default: 0 },
-  paymentGatewayId: String, // e.g., Razorpay/Stripe ID
+  paymentId: { type: String },
   createdAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model('Subscription', SubscriptionSchema);
+export default mongoose.model('Subscription', SubscriptionSchema);
