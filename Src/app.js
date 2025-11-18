@@ -9,6 +9,7 @@ import paymentRoutes from "./modules/payment/routing/paymentRoutes.js"
 import menuRoutin from "./modules/Menu/routing/menuRouting.js";
 import orderRouting from "./modules/Orders/routing/orderRouting.js";
 import subscriptionRoutes from "./modules/subscription/routes/subscriptionRoutes.js"
+import feedbackRoutes from './modules/feedback/routes/feedbackRoutes.js'
 
 dotenv.config();
 
@@ -24,6 +25,8 @@ app.use("/api/menu", menuRoutin);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/order", orderRouting);
 app.use("/api/subscription", subscriptionRoutes);
+app.use("/api/feedback", feedbackRoutes);
+
 
 
 
