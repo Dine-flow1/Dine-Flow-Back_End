@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 import PDFDocument from "pdfkit";
 import Restaurant from "../../Restaurant/models/restaurantmodel.js";
+import { sendOrderUpdate } from "../../../socket/trackingGateway.js";
 
 const orderServices = {
   createOrder: async (customerId, data) => {
@@ -176,26 +177,19 @@ const orderServices = {
   },
   // ✅ 7. Update Order Status
   updateOrderStatus: async (orderId, restaurantId, status) => {
-    console.log(orderId);
-    console.log(restaurantId);
-    console.log(status);
+    const order = await OrderModel.findOne({ _id: orderId });
+    if (!order) throw new Error("Order not found");
 
-    try {
-      const order = await OrderModel.findOne({ _id: orderId });
-      if (!order) return { status: 404, message: "Order not found" };
+    order.orderStatus = status;
+    await order.save();
 
-      order.orderStatus = status;
+    // Emit real-time update 🟢
+    sendOrderUpdate(orderId, {
+      type: "status_update",
+      status,
+    });
 
-      if (status === "Accepted" && order.paymentStatus !== "Paid") {
-        order.paymentStatus = "Paid";
-      }
-
-      await order.save();
-      return { status: 200, message: `Order ${status}`, data: order };
-    } catch (err) {
-      console.log("UpdateOrderStatus Error:", err);
-      return { status: 500, message: "Internal server error" };
-    }
+    return { status: 200, data: order };
   },
 
   // ✅ 8. Get Orders by Customer ID (for restaurant view)
@@ -210,17 +204,19 @@ const orderServices = {
   },
 
   assignDelivery: async (orderId, deliveryPersonId) => {
-    try {
-      const order = await OrderModel.findById(orderId);
-      if (!order) return { status: 404, message: "Order not found" };
+    const order = await OrderModel.findById(orderId);
+    if (!order) throw new Error("Order not found");
 
-      order.deliveryDetails.deliveryPersonId = deliveryPersonId;
-      await order.save();
+    order.deliveryDetails.assignedDeliveryPerson = { id: deliveryPersonId };
+    await order.save();
 
-      return { status: 200, message: "Delivery person assigned", data: order };
-    } catch (error) {
-      return { status: 500, message: error.message };
-    }
+    // Emit real-time update 🟢
+    sendOrderUpdate(orderId, {
+      type: "delivery_assigned",
+      deliveryPersonId,
+    });
+
+    return { status: 200, data: order };
   },
   generateInvoice: async (orderId) => {
     try {
@@ -270,8 +266,7 @@ const orderServices = {
         doc
           .fontSize(12)
           .text(
-            `${index + 1}. ${item.name} - ${item.quantity} x ₹${
-              item.price
+            `${index + 1}. ${item.name} - ${item.quantity} x ₹${item.price
             } = ₹${item.quantity * item.price}`
           );
       });
