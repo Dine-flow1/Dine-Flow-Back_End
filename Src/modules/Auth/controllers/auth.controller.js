@@ -14,18 +14,32 @@ export const register = async (req, res) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+export const verifyOtp = async (req, res) => {
+  try {
+    const result = await authService.verifyOtp(req.body);
+
+    res.status(200).json({
+      success: true,
+      message: result.message,
+    });
+  } catch (error) {
+    console.log("OTP Verify Error:", error);
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
 
 export const login = async (req, res) => {
   try {
     const { token, user } = await authService.login(req.body);
-    console.log("controler",token);
-    console.log("controler",user);
-    
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-       maxAge: 15 * 60 * 1000,
+    // console.log("controler", token);
+    // console.log("controler", user);
+
+res.cookie("token", token, {
+      httpOnly: true, // cookie cannot be accessed by JS
+      secure: process.env.NODE_ENV === "production", 
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", 
+      path: "/", // cookie available on all backend routes
+      maxAge: 15 * 60 * 1000, 
     });
 
     res.status(200).json({

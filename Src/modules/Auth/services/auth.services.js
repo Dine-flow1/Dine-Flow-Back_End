@@ -8,15 +8,29 @@ const authService = {
     fullName,
     email,
     password,
+    confirmPassword,
     contact,
     profileImage,
     address,
     role,
   }) => {
-    const existingUser = await UserModel.findOne({ email });
-    if (existingUser) throw new Error("Email already registered ");
+    // 1️⃣ Check confirm password
+    if (password !== confirmPassword) {
+      throw new Error("Password & Confirm Password do not match");
+    }
 
+    // 2️⃣ Check existing user
+    const existingUser = await UserModel.findOne({ email });
+    if (existingUser) throw new Error("Email already registered");
+
+    // 3️⃣ Hash password
     const hashed = await bcrypt.hash(password, 10);
+
+    // 4️⃣ Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
+    const otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+    // 5️⃣ Create new user
     const user = await UserModel.create({
       fullName,
       email,
@@ -25,18 +39,48 @@ const authService = {
       profileImage,
       address,
       role: "customer",
+      verifyOtp: otp,
+      verifyOtpExpireAt: otpExpiry,
+      isAccountVerified: false,
     });
+
+    // 6️⃣ Send OTP Email
     await sendEmail(
       email,
-      "Welcome to DineFlow!",
+      "Your DineFlow OTP Verification",
       `Hi ${fullName}`,
-      "Thank you for registering with DineFlow"
+      `Your verification OTP is: ${otp}. It is valid for 10 minutes.`
     );
+
     return {
       userId: user._id,
       email: user.email,
       role: user.role,
       fullName: user.fullName,
+      message: "OTP Sent to your email.",
+    };
+  },
+  verifyOtp: async ({ email, otp }) => {
+    const user = await UserModel.findOne({ email });
+    if (!user) throw new Error("User not found");
+
+    console.log("Type of stored OTP:", typeof user.verifyOtp); 
+    console.log("Type of stored OTP:", typeof otp); 
+
+    // Compare as strings
+    if (user.verifyOtp !== otp) throw new Error("Invalid OTP");
+
+    if (user.verifyOtpExpireAt < Date.now()) throw new Error("OTP expired");
+
+    // Update status
+    user.isAccountVerified = true;
+    user.verifyOtp = null;
+    user.verifyOtpExpireAt = null;
+
+    await user.save();
+
+    return {
+      message: "OTP verified successfully. You can now login.",
     };
   },
 
@@ -49,7 +93,7 @@ const authService = {
     const token = Jwt.sign(
       { email: user.email, _id: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn:process.env.JWT_EXPIRES|| "15m" }
+      { expiresIn: process.env.JWT_EXPIRES || "15m" }
     );
     await sendEmail(
       email,
@@ -67,7 +111,6 @@ const authService = {
       },
     };
   },
-
 
   forgotPassword: async (email) => {
     const user = await UserModel.findOne({ email });
@@ -97,7 +140,7 @@ const authService = {
     await user.save();
     return { message: "Password reset successfully" };
   },
-    logout: async () => {
+  logout: async () => {
     return { message: "Logged out successfully" };
   },
 };

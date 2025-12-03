@@ -1,13 +1,16 @@
-import express from "express"
-import * as authController from "../controllers/auth.controller.js"
-import { authMiddleware, authorizeRoles } from "../../../middleware/authmiddleware.js"
+import express from "express";
+import * as authController from "../controllers/auth.controller.js";
+import {
+  authMiddleware,
+  authorizeRoles,
+} from "../../../middleware/authmiddleware.js";
 
+const authRouting = express.Router();
+authRouting.post("/register", authController.register);
+authRouting.post("/verify-otp", authController.verifyOtp);
+authRouting.post("/login", authController.login);
+authRouting.post("/logout", authController.logout);
+authRouting.post("/forgot-password", authController.forgotPassword);
+authRouting.post("/reset-password", authController.resetPassword);
 
-const authRouting = express.Router()
-authRouting.post("/register",authController.register)
-authRouting.post("/login", authController.login)
-authRouting.post("/logout", authController.logout)
-authRouting.post("/forgot-password",authController.forgotPassword)
-authRouting.post("/reset-password",authController.resetPassword)
-
-export default authRouting
+export default authRouting;
