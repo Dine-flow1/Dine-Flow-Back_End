@@ -1,26 +1,42 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-const SubscriptionSchema = new mongoose.Schema({
-  restaurantId: {
+const RestaurantSubscriptionSchema = new mongoose.Schema({
+  restaurant: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Restaurant',
+    ref: "Restaurant",
     required: true,
   },
-  subscriptionPlan: {
-    type: String,
-    enum: ['6_months', '1_year'],
+
+  plan: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "SubscriptionPlan",
     required: true,
   },
+
+  startDate: {
+    type: Date,
+    default: Date.now,
+  },
+
+  endDate: {
+    type: Date,
+    required: true,
+  },
+
   status: {
     type: String,
-    enum: ['pending', 'active', 'expired', 'canceled'],
-    default: 'pending',
+    enum: ["active", "expired", "cancelled"],
+    default: "active",
   },
-  startDate: { type: Date, default: Date.now },
-  endDate: Date,
-  amount: { type: Number, default: 0 },
-  paymentId: { type: String },
+
+  paymentId: {
+    type: String,
+  },
+
   createdAt: { type: Date, default: Date.now },
 });
 
-export default mongoose.model('Subscription', SubscriptionSchema);
+export default mongoose.model(
+  "RestaurantSubscription",
+  RestaurantSubscriptionSchema
+);

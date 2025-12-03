@@ -11,6 +11,7 @@ import orderRouting from "./modules/Orders/routing/orderRouting.js";
 import subscriptionRoutes from "./modules/subscription/routes/subscriptionRoutes.js"
 import feedbackRoutes from './modules/feedback/routes/feedbackRoutes.js'
 import TableRouting from "./modules/Booking/Routing/tableRouting.js";
+import { initTrackingSocket } from "./socket/trackingGateway.js";
 
 dotenv.config();
 
@@ -36,6 +37,8 @@ app.use("/api/tableBooking", TableRouting);
 connectDB();
 
 const PORT = process.env.PORT || 9999;
-app.listen(PORT, () => {
+const server =app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
+initTrackingSocket(server)

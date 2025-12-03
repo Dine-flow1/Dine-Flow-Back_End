@@ -2,12 +2,12 @@ import subscriptionService from '../service/subscriptionService.js';
 
 export const initiateSubscription = async (req, res) => {
   try {
-    const { plan } = req.body;
+    const { planId } = req.body; // planId instead of "plan"
     const restaurantId = req.user.id;
 
-    if (!plan) return res.status(400).json({ message: "Plan is required" });
+    if (!planId) return res.status(400).json({ message: "Plan ID is required" });
 
-    const paymentData = await subscriptionService.initiatePayment(restaurantId, plan);
+    const paymentData = await subscriptionService.initiatePayment(restaurantId, planId);
 
     res.status(200).json({
       success: true,
@@ -15,8 +15,7 @@ export const initiateSubscription = async (req, res) => {
       data: paymentData
     });
   } catch (error) {
-    console.error("Subscription error:", error);
-    res.status(500).json({ success: false, message: error.message, stack: error.stack });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
