@@ -16,13 +16,13 @@ router.post(
 router.get(
   "/categories",
   authMiddleware,
-  authorizeRoles("restaurant_owner"),
+  authorizeRoles("restaurant_owner", "customer"),
   menuController.getAllCategories
 );
 router.get(
   "/category/:id",
   authMiddleware,
-  authorizeRoles("restaurant_owner"),
+  authorizeRoles("restaurant_owner", "customer"),
   menuController.getCategoryById
 );
 router.put(
@@ -48,13 +48,12 @@ router.post(
 router.get(
   "/items",
   authMiddleware,
-  authorizeRoles(""),
   menuController.getAllItems
 );
 router.get(
   "/item/:id",
   authMiddleware,
-  authorizeRoles(""),
+  authorizeRoles("customer"),
   menuController.getItemById
 );
 router.put(
@@ -74,7 +73,7 @@ router.delete(
 router.get(
   "/fullmenu/:restaurantId",
   authMiddleware,
-  authorizeRoles("restaurant_owner"),
+  authorizeRoles("restaurant_owner", "customer"),
   menuController.getFullMenu
 );
 

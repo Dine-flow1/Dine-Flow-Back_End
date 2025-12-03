@@ -4,11 +4,13 @@ import {
   registerRestaurantSchema,
 } from "../validation/validation.js";
 
-
 export const registerRestaurants = async (req, res) => {
   try {
     const { restaurantData, ownerData } = req.body;
-    const result = await restaurantService.register({ restaurantData, ownerData });
+    const result = await restaurantService.register({
+      restaurantData,
+      ownerData,
+    });
     res.status(201).json({ success: true, data: result });
   } catch (error) {
     console.error("RegisterController Error:", error);
@@ -27,18 +29,18 @@ export const verifyRestaurantOtp = async (req, res) => {
   }
 };
 
-
-export const addBranch = async () => {
+export const addBranch = async (req, res) => {
   try {
-    validate(addBranchSchema, req.body);
-
     const { restaurantId } = req.params;
+    console.log("Restaurant ID:", restaurantId);
+
     const branchData = req.body;
+
     const result = await restaurantService.addBranch(restaurantId, branchData);
 
-    res.status(200).json({ success: true, data: result });
+    return res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
+    return res.status(400).json({ success: false, message: error.message });
   }
 };
 
