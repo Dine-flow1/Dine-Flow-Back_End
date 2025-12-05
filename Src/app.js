@@ -11,11 +11,9 @@ import orderRouting from "./modules/Orders/routing/orderRouting.js";
 import subscriptionRoutes from "./modules/subscription/routes/subscriptionRoutes.js"
 import feedbackRoutes from './modules/feedback/routes/feedbackRoutes.js'
 import TableRouting from "./modules/Booking/Routing/tableRouting.js";
-<<<<<<< HEAD
 import cors from "cors";
-=======
 import { initTrackingSocket } from "./socket/trackingGateway.js";
->>>>>>> 2878403bbcfb058486d546ff86fe9316362acb1d
+
 
 dotenv.config();
 
@@ -43,13 +41,8 @@ app.use("/api/tableBooking", TableRouting);
 connectDB();
 
 const PORT = process.env.PORT || 9999;
-<<<<<<< HEAD
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
-=======
-const server =app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
->>>>>>> 2878403bbcfb058486d546ff86fe9316362acb1d
-});
+})
 
 initTrackingSocket(server)
