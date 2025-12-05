@@ -4,8 +4,48 @@ import UserModel from "../../Users/Model/UsersSchema.js";
 import sendEmail from "../utils/email.js";
 
 const restaurantService = {
+  sendOtp: async (email, phone) => {
+    let user = await UserModel.findOne({ email });
+
+    if (user && user.isAccountVerified)
+      throw new Error("Email already registered");
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = Date.now() + 5 * 60 * 1000;
+
+    if (user) {
+      // Update existing unverified user
+      user.verifyOtp = otp;
+      user.verifyOtpExpireAt = otpExpires;
+      user.contact = phone;
+      await user.save();
+    } else {
+      // Create new temp user
+      user = await UserModel.create({
+        fullName: "Temp",
+        email,
+        contact: phone,
+        role: "restaurant_owner",
+        isAccountVerified: false,
+        verifyOtp: otp,
+        verifyOtpExpireAt: otpExpires,
+      });
+    }
+
+    await sendEmail(
+      email,
+      "Your Verification OTP",
+      `Your OTP is <b>${otp}</b>, valid for 5 minutes.`
+    );
+
+    return { message: "OTP sent successfully", userId: user._id };
+  },
+
   register: async (data) => {
     const { restaurantData, ownerData } = data;
+
+    if (!ownerData || !restaurantData)
+      throw new Error("Missing ownerData or restaurantData");
 
     const existingUser = await UserModel.findOne({ email: ownerData.email });
     if (existingUser)
@@ -22,25 +62,12 @@ const restaurantService = {
       isAccountVerified: false,
     });
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpires = Date.now() + 5 * 60 * 1000;
-
     const restaurant = await Restaurant.create({
       ...restaurantData,
       ownerId: user._id,
-      otp,
-      otpExpires,
       isVerified: false,
       status: "pending_verification",
     });
-    console.log("New User ID:", user._id);
-
-    await sendEmail(
-      ownerData.email,
-      "Verify your DineFlow Account",
-      `Hi ${ownerData.fullName},`,
-      `Your OTP for DineFlow account verification is <b>${otp}</b>. It will expire in 5 minutes.`
-    );
 
     return {
       message: "OTP sent to your email for verification.",
@@ -49,6 +76,29 @@ const restaurantService = {
       ownerEmail: ownerData.email,
       userId: user._id,
       role: user.role,
+    };
+  },
+  // ---------------------- VERIFY OTP ----------------------
+  verifyOtp: async (email, otp) => {
+    const user = await UserModel.findOne({ email });
+    if (!user) throw new Error("OTP not requested");
+
+    if (user.isAccountVerified) throw new Error("Already verified");
+
+    if (user.verifyOtp !== otp) throw new Error("Invalid OTP");
+
+    if (user.verifyOtpExpireAt < Date.now()) throw new Error("OTP expired");
+
+    user.isAccountVerified = true;
+    user.verifyOtp = undefined;
+    user.verifyOtpExpireAt = undefined;
+
+    await user.save();
+
+    return {
+      message: "Email verified successfully",
+      email,
+      userId: user._id,
     };
   },
 
@@ -91,31 +141,6 @@ const restaurantService = {
         email: restaurant.owner.email,
         role: restaurant.owner.role,
       },
-    };
-  },
-
-  verifyOtp: async (email, otp) => {
-    const restaurant = await Restaurant.findOne({ "owner.email": email });
-    if (!restaurant) throw new Error("Restaurant not found");
-
-    if (restaurant.isVerified) throw new Error("Already verified");
-
-    if (!restaurant.otp || restaurant.otp !== otp)
-      throw new Error("Invalid OTP");
-
-    if (!restaurant.otpExpires || restaurant.otpExpires < Date.now())
-      throw new Error("OTP expired");
-
-    restaurant.isVerified = true;
-    restaurant.otp = undefined;
-    restaurant.otpExpires = undefined;
-
-    await restaurant.save();
-
-    return {
-      message: "Restaurant verified successfully",
-      restaurantId: restaurant._id,
-      email: restaurant.owner.email,
     };
   },
 

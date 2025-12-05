@@ -4,16 +4,25 @@ import {
   registerRestaurantSchema,
 } from "../validation/validation.js";
 
+export const sendOtpController = async (req, res) => {
+  try {
+    const { email, phone } = req.body;
+    const result = await restaurantService.sendOtp(email, phone);
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
 export const registerRestaurants = async (req, res) => {
   try {
     const { restaurantData, ownerData } = req.body;
-    const result = await restaurantService.register({
+    const result = await  restaurantService.register(
       restaurantData,
-      ownerData,
-    });
+      ownerData
+    );
     res.status(201).json({ success: true, data: result });
   } catch (error) {
-    console.error("RegisterController Error:", error);
     res.status(400).json({ success: false, message: error.message });
   }
 };
@@ -24,7 +33,6 @@ export const verifyRestaurantOtp = async (req, res) => {
     const result = await restaurantService.verifyOtp(email, otp);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    console.error("VerifyOtpController Error:", error);
     res.status(400).json({ success: false, message: error.message });
   }
 };

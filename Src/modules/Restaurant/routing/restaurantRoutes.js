@@ -4,6 +4,7 @@ import {
   getAllRestaurants,
   getRestaurantById,
   registerRestaurants,
+  sendOtpController,
   verifyRestaurantOtp,
 } from "../controller/restaurantController.js";
 import {
@@ -15,9 +16,10 @@ import { validateRequest } from "../../../middleware/validateRequest.js";
 
 const Restaurantrouter = express.Router();
 
+Restaurantrouter.post("/send-otp", sendOtpController);
 Restaurantrouter.post("/register", registerRestaurants);
-
 Restaurantrouter.post("/verify-otp", verifyRestaurantOtp);
+
 
 Restaurantrouter.get(
   "/restaurants",
