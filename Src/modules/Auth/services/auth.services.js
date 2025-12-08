@@ -93,7 +93,7 @@ const authService = {
     const token = Jwt.sign(
       { email: user.email, _id: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES || "15m" }
+      { expiresIn: process.env.JWT_EXPIRES  }
     );
     await sendEmail(
       email,

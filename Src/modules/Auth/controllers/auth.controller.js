@@ -31,15 +31,25 @@ export const verifyOtp = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { token, user } = await authService.login(req.body);
-    // console.log("controler", token);
-    // console.log("controler", user);
 
-res.cookie("token", token, {
-      httpOnly: true, // cookie cannot be accessed by JS
-      secure: process.env.NODE_ENV === "production", 
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", 
-      path: "/", // cookie available on all backend routes
-      maxAge: 15 * 60 * 1000, 
+    // Convert JWT_EXPIRES to milliseconds for cookie maxAge
+    const jwtExpires = process.env.JWT_EXPIRES || "7d"; // default 7 days
+    let maxAge = 7 * 24 * 60 * 60 * 1000; // default 7 days in ms
+
+    if (jwtExpires.endsWith("d")) {
+      maxAge = parseInt(jwtExpires) * 24 * 60 * 60 * 1000;
+    } else if (jwtExpires.endsWith("h")) {
+      maxAge = parseInt(jwtExpires) * 60 * 60 * 1000;
+    } else if (jwtExpires.endsWith("m")) {
+      maxAge = parseInt(jwtExpires) * 60 * 1000;
+    }
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      path: "/",
+      maxAge, // ✅ use the JWT_EXPIRES duration
     });
 
     res.status(200).json({
@@ -52,6 +62,7 @@ res.cookie("token", token, {
     res.status(401).json({ success: false, message: error.message });
   }
 };
+
 export const logout = async (req, res) => {
   try {
     const result = await authService.logout();
