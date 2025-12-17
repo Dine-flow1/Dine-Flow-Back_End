@@ -143,20 +143,9 @@ const restaurantService = {
       },
     };
   },
-
-  addBranch: async (restaurantId, branchData) => {
-    const restaurant = await Restaurant.findById(restaurantId);
-    if (!restaurant) throw new Error("Restaurant not found");
-
-    restaurant.branches.push(branchData);
-    await restaurant.save();
-    return restaurant;
-  },
-
   getAll: async () => {
     return await Restaurant.find().populate("ownerId", "fullName email role");
   },
-
   getById: async (id) => {
     const restaurant = await Restaurant.findById(id).populate(
       "ownerId",
@@ -164,6 +153,152 @@ const restaurantService = {
     );
     if (!restaurant) throw new Error("Restaurant not found");
     return restaurant;
+  },
+addBranch: async (restaurantId, branchData) => {
+    // Find the restaurant
+    const restaurant = await Restaurant.findById(restaurantId);
+    if (!restaurant) throw new Error("Restaurant not found");
+
+    // Optional: Add defaults if missing
+    const newBranch = {
+      branchName: branchData.branchName,
+      branchCode: branchData.branchCode || `BR-${Date.now()}`, // auto generate if missing
+      branchType: branchData.branchType || "Restaurant",
+      branchStatus: branchData.branchStatus || "active",
+      address: branchData.address,
+      city: branchData.city || "",
+      state: branchData.state || "",
+      pincode: branchData.pincode || "",
+      landmark: branchData.landmark || "",
+      geoLocation: branchData.geoLocation || { type: "Point", coordinates: [0, 0] },
+      contactPhone: branchData.contactPhone,
+      contactEmail: branchData.contactEmail || "",
+      whatsappNumber: branchData.whatsappNumber || "",
+      openingHours: branchData.openingHours || {},
+      workingDays: branchData.workingDays || [],
+      breakTime: branchData.breakTime || null,
+      managerId: branchData.managerId || null,
+      receptionistIds: branchData.receptionistIds || [],
+      kitchenStaffIds: branchData.kitchenStaffIds || [],
+      deliveryStaffIds: branchData.deliveryStaffIds || [],
+      totalTables: branchData.totalTables || 0,
+      totalSeats: branchData.totalSeats || 0,
+      seatingType: branchData.seatingType || "",
+      services: branchData.services || {},
+      paymentMethods: branchData.paymentMethods || [],
+      gstNumber: branchData.gstNumber || "",
+      fssaiNumber: branchData.fssaiNumber || "",
+      serviceCharge: branchData.serviceCharge || 0,
+      taxPercentage: branchData.taxPercentage || 0,
+      orderPrefix: branchData.orderPrefix || "",
+      invoicePrefix: branchData.invoicePrefix || "",
+      defaultPrinter: branchData.defaultPrinter || "",
+      branchImage: branchData.branchImage || "",
+      notes: branchData.notes || "",
+    };
+
+    // Push the new branch
+    restaurant.branches.push(newBranch);
+    await restaurant.save();
+
+    // Return the newly added branch (last element)
+    return restaurant.branches[restaurant.branches.length - 1];
+  },
+
+getAllBranchesByRole: async ({ role, userId, restaurantId }) => {
+  let restaurant;
+
+  // OWNER
+  if (role === "restaurant_owner") {
+    restaurant = await Restaurant.findOne({ ownerId: userId });
+    if (!restaurant) throw new Error("Restaurant not found for owner");
+  }
+
+  // CUSTOMER
+  if (role === "customer") {
+    if (!restaurantId) throw new Error("Restaurant ID is required");
+    restaurant = await Restaurant.findById(restaurantId);
+    if (!restaurant) throw new Error("Restaurant not found");
+  }
+
+  // Map branches with full details
+  const branches = await Promise.all(
+    restaurant.branches.map(async (b) => {
+      // Populate manager info
+      const manager = b.managerId
+        ? await User.findById(b.managerId).select("fullName email phone")
+        : null;
+
+      // Populate receptionists info
+      
+
+      return {
+        branchId: b._id,
+        branchName: b.branchName,
+        branchCode: b.branchCode,
+        branchType: b.branchType,
+        branchStatus: b.branchStatus,
+        address: b.address,
+        city: b.city,
+        state: b.state,
+        pincode: b.pincode,
+        landmark: b.landmark,
+        geoLocation: b.geoLocation,
+        contactPhone: b.contactPhone,
+        contactEmail: b.contactEmail,
+        whatsappNumber: b.whatsappNumber,
+        openingHours: b.openingHours,
+        workingDays: b.workingDays,
+        breakTime: b.breakTime || null,
+        manager: manager || null,
+        totalTables: b.totalTables,
+        totalSeats: b.totalSeats,
+        seatingType: b.seatingType || null,
+        services: b.services,
+        paymentMethods: b.paymentMethods,
+        gstNumber: b.gstNumber || null,
+        fssaiNumber: b.fssaiNumber || null,
+        serviceCharge: b.serviceCharge || 0,
+        taxPercentage: b.taxPercentage || 0,
+        orderPrefix: b.orderPrefix || "",
+        invoicePrefix: b.invoicePrefix || "",
+        defaultPrinter: b.defaultPrinter || "",
+        branchImage: b.branchImage || null,
+        notes: b.notes || "",
+        createdAt: b.createdAt,
+        updatedAt: b.updatedAt,
+      };
+    })
+  );
+
+  return {
+    restaurantId: restaurant._id,
+    restaurantName: restaurant.restaurantName,
+    totalBranches: branches.length,
+    branches,
+  };
+},
+
+
+
+  getBranchById: async (restaurantId, branchId) => {
+    const restaurant = await Restaurant.findById(restaurantId);
+
+    if (!restaurant) {
+      throw new Error("Restaurant not found");
+    }
+
+    const branch = restaurant.branches.id(branchId);
+
+    if (!branch) {
+      throw new Error("Branch not found");
+    }
+
+    return {
+      restaurantId: restaurant._id,
+      restaurantName: restaurant.restaurantName,
+      branch,
+    };
   },
 };
 
