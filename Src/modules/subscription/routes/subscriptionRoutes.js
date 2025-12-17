@@ -1,10 +1,12 @@
 import express from 'express';
-import { initiateSubscription, verifySubscriptionPayment } from '../controller/subscriptionController.js';
+import { initiateSubscription, verifySubscriptionPayment,getSubscriptionStatus } from '../controller/subscriptionController.js';
 import {
   authMiddleware,
   authorizeRoles,
 } from "../../../middleware/authmiddleware.js";
 const router = express.Router();
+
+
 
 router.post(
   '/subInitiate',
@@ -20,14 +22,18 @@ router.post(
   verifySubscriptionPayment
 );
 
+router.get(
+  "/status",
+  authMiddleware,
+  authorizeRoles("restaurant_owner"),
+  getSubscriptionStatus
+);
 
 router.get("/subscription-plans", async (req, res) => {
-  try {
-    const plans = await SubscriptionPlan.find();
-    res.status(200).json(plans);
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
+  return res.status(200).json([
+    { plan: "699", duration: 6, price: 699 },
+    { plan: "1199", duration: 12, price: 1199 },
+  ]);
 });
 
 export default router;

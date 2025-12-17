@@ -1,7 +1,7 @@
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
-import subscription from '../models/subscription.js';
-import subscriptionPlan from '../models/subscriptionPlan.js';
+import RestaurantSubscription from '../models/subscription.js';
+
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -9,22 +9,27 @@ const razorpay = new Razorpay({
 });
 
 const subscriptionService = {
-  initiatePayment: async (restaurantId, planId) => {
 
-    const plan = await subscriptionPlan.findById(planId);
-    if (!plan) throw new Error("Invalid Subscription Plan");
+  initiatePayment: async (restaurantId, plan) => {
 
-    const amount = plan.price;
+    // Validate plan
+    if (!["699", "1199"].includes(plan)) {
+      throw new Error("Invalid subscription plan");
+    }
 
+    const amount = Number(plan);
+
+    // Create Razorpay order
     const order = await razorpay.orders.create({
       amount: amount * 100,
       currency: "INR",
-      receipt: `sub_${restaurantId}_${Date.now()}`,
+      receipt: `sub_${Date.now()}`,
     });
 
+    // Create DB record (pending)
     const subscription = await RestaurantSubscription.create({
       restaurant: restaurantId,
-      plan: planId,
+      plan,
       amount,
       status: "pending"
     });
@@ -38,7 +43,12 @@ const subscriptionService = {
     };
   },
 
-  verifyPayment: async ({ razorpay_order_id, razorpay_payment_id, razorpay_signature, subscriptionId }) => {
+  verifyPayment: async ({
+    razorpay_order_id,
+    razorpay_payment_id,
+    razorpay_signature,
+    subscriptionId
+  }) => {
 
     const generatedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_SECRET)
@@ -49,12 +59,13 @@ const subscriptionService = {
       throw new Error("Invalid payment signature");
     }
 
-    const subscription = await RestaurantSubscription.findById(subscriptionId)
-      .populate("plan");
-
+    const subscription = await RestaurantSubscription.findById(subscriptionId);
     if (!subscription) throw new Error("Subscription not found");
 
-    const duration = subscription.plan.durationMonths;
+    // PLAN = 699 => 6 months
+    // PLAN = 1199 => 12 months
+    const duration = subscription.plan === "699" ? 6 : 12;
+
     const now = new Date();
     const endDate = new Date(now);
     endDate.setMonth(now.getMonth() + duration);
@@ -68,6 +79,7 @@ const subscriptionService = {
 
     return subscription;
   }
+
 };
 
 export default subscriptionService;

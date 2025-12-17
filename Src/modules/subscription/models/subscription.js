@@ -8,35 +8,35 @@ const RestaurantSubscriptionSchema = new mongoose.Schema({
   },
 
   plan: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "SubscriptionPlan",
-    required: true,
+    type: String,
+    enum: ["699", "1199"],
+    required: true
+  },
+
+  amount: {
+    type: Number,
+    required: true
   },
 
   startDate: {
     type: Date,
-    default: Date.now,
+    default: null,
   },
 
   endDate: {
     type: Date,
-    required: true,
+    default: null,
   },
 
   status: {
     type: String,
-    enum: ["active", "expired", "cancelled"],
-    default: "active",
+    enum: ["pending", "active", "expired", "cancelled"],
+    default: "pending",
   },
 
-  paymentId: {
-    type: String,
-  },
+  paymentId: { type: String },
 
   createdAt: { type: Date, default: Date.now },
 });
 
-export default mongoose.model(
-  "RestaurantSubscription",
-  RestaurantSubscriptionSchema
-);
+export default mongoose.model("RestaurantSubscription", RestaurantSubscriptionSchema);
