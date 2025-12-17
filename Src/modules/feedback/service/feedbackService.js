@@ -37,7 +37,7 @@ const feedbackService = {
     } catch (error) {
       throw new Error(error.message);
     }
-  },
+  },  
 };
 
 export default feedbackService;
