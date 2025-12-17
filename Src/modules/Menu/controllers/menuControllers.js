@@ -8,10 +8,14 @@ export const menuController = {
     return res.status(result.status).json(result);
   },
 
-  getAllCategories: async (req, res) => {
-    const result = await menuService.getAllCategories(req.query.restaurantId);
-    return res.status(result.status).json(result);
-  },
+getAllCategories: async (req, res) => {
+  const result = await menuService.getAllCategories(
+    req.user,
+    req.query.restaurantId
+  );
+  return res.status(result.status).json(result);
+},
+
 
   getCategoryById: async (req, res) => {
     const result = await menuService.getCategoryById(req.params.id);

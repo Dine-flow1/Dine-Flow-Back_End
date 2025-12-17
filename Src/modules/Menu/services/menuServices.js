@@ -6,14 +6,16 @@ import mongoose from "mongoose";
 export const menuService = {
   createCategory: async (data, user) => {
     try {
-      let restaurantId = user?.restaurantId;
+      let restaurantId = user.userId
+      // console.log(restaurantId);
+      ;
       if (!restaurantId) {
-        const restaurant = await Restaurant.findOne({ ownerId: user._id });
+        const restaurant = await Restaurant.findOne({ ownerId: user.userId});
         if (!restaurant)
           return { status: 404, message: "Restaurant not found" };
         restaurantId = restaurant._id;
       }
-      console.log(restaurantId);
+      // console.log(restaurantId);
      
       const existingCategory = await Menucategory.findOne({
         restaurantId,
@@ -31,16 +33,47 @@ export const menuService = {
     }
   },
 
-  getAllCategories: async (id) => {
-    console.log("sdds",id);
+getAllCategories: async (user, restaurantId) => {
+  console.log(user);
+  console.log(restaurantId);
+  
+  try {
+    let query = {};
 
-    try {
-      const categories = await Menucategory.find({ id });
-      return { status: 200, message: "Categories fetched", data: categories };
-    } catch (error) {
-      return { status: 500, message: error.message };
+    // 🔹 RESTAURANT OWNER
+    if (user.role === "restaurant_owner") {
+      if (!user.userId) {
+        return {
+          status: 400,
+          message: "Restaurant ID not linked to owner",
+        };
+      }
+      query.restaurantId = user.userId;
     }
-  },
+
+    // 🔹 CUSTOMER
+    else if (user.role === "customer") {
+      if (!restaurantId) {
+        return {
+          status: 400,
+          message: "restaurantId is required",
+        };
+      }
+      query.restaurantId = restaurantId;
+    }
+
+    const categories = await Menucategory.find(query);
+
+    return {
+      status: 200,
+      message: "Categories fetched successfully",
+      data: categories,
+    };
+  } catch (error) {
+    return { status: 500, message: error.message };
+  }
+},
+
 
   getCategoryById: async (id) => {
     try {
@@ -79,7 +112,9 @@ export const menuService = {
 
  createItem: async (data, user) => {
     try {
-      let restaurantId = user?.restaurantId;
+      let restaurantId = user.userId;
+      console.log(restaurantId);
+      
       if (!restaurantId) {
         const restaurant = await Restaurant.findOne({ ownerId: user._id });
         if (!restaurant)
