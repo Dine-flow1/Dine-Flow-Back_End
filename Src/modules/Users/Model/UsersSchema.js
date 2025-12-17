@@ -9,7 +9,7 @@ const userSchama = new mongoose.Schema({
     trim: true,
   },
   password: { type: String },
-  googleId: { type: String }, 
+  googleId: { type: String },
   role: {
     type: String,
     enum: [
@@ -21,6 +21,17 @@ const userSchama = new mongoose.Schema({
     ],
     required: true,
   },
+  managedRestaurant: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Restaurant",
+  },
+
+  managedBranches: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+       branchName: String,
+    },
+  ],
   contact: { type: String },
   profileImage: { type: String },
   address: {
@@ -34,6 +45,10 @@ const userSchama = new mongoose.Schema({
     },
   },
   isAccountVerified: { type: Boolean, default: false },
+  isActive: {
+    type: Boolean,
+    default: true,
+  },
   verifyOtp: String,
   verifyOtpExpireAt: Date,
   resetOtp: String,
